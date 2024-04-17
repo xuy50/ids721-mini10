@@ -23,9 +23,8 @@ tracing-subscriber = { version = "0.3", default-features = false, features = ["e
 # json
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-serde_urlencoded = "0.7.1"
 # s3
-#aws-smithy-runtime-api = "1.2.1"
+aws-smithy-runtime-api = "1.2.1"
 aws-config = { version = "1.1.9", features = ["behavior-version-latest"] }
 aws-sdk-s3 = "1.21.0"
 csv = "1.1"
@@ -33,7 +32,7 @@ csv = "1.1"
 openssl = { version = "0.10", features = ["vendored"] }
 # rust-bert
 rust-bert = "0.20.0"
-#clap = { version = "4.0.32", features = ["derive"] }
-#sqlite = "0.30.3"
+clap = { version = "4.0.32", features = ["derive"] }
+sqlite = "0.30.3"
 # thiserror
 thiserror = "1.0"

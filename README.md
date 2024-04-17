@@ -6,3 +6,13 @@ Implement query endpoint
 Rust AWS Lambda function
 Step Functions workflow coordinating Lambdas
 Orchestrate data processing pipeline
+
+
+rust_lambda_hf
+│
+├── src
+│ └── main.rs
+│
+├── Cargo.toml
+│
+└── .gitignore
