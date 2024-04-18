@@ -1,0 +1,39 @@
+[package]
+name = "rust_lambda_hf"
+version = "0.1.0"
+edition = "2021"
+
+# Starting in Rust 1.62 you can use `cargo add` to add dependencies
+# to your project.
+#
+# If you're using an older Rust version,
+# download cargo-edit(https://github.com/killercup/cargo-edit#installation)
+# to install the `add` subcommand.
+#
+# Running `cargo add DEPENDENCY_NAME` will
+# add the latest version of a dependency to the list,
+# and it will keep the alphabetic ordering for you.
+
+[dependencies]
+lambda_http = "0.11.1"
+lambda_runtime = "0.11.1"
+tokio = { version = "1", features = ["macros"] }
+tracing = { version = "0.1", features = ["log"] }
+tracing-subscriber = { version = "0.3", default-features = false, features = ["env-filter", "fmt"] }
+# json
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_urlencoded = "0.7.1"
+# s3
+#aws-smithy-runtime-api = "1.2.1"
+aws-config = { version = "1.1.9", features = ["behavior-version-latest"] }
+aws-sdk-s3 = "1.21.0"
+csv = "1.1"
+# openssl
+openssl = { version = "0.10", features = ["vendored"] }
+# rust-bert
+rust-bert = "0.20.0"
+#clap = { version = "4.0.32", features = ["derive"] }
+#sqlite = "0.30.3"
+# thiserror
+thiserror = "1.0"

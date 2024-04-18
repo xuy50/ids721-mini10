@@ -1,10 +1,9 @@
 use tracing::{Level};
 use tracing_subscriber::FmtSubscriber;
 use tracing_subscriber::filter::EnvFilter;
-use lambda_http::{run, service_fn, Body, Error, Request, Response, http, http::StatusCode};
+use lambda_http::{run, service_fn, Body, Error, Request, Response, http::StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use serde_urlencoded;
 use aws_sdk_s3::Client as S3Client;
 use aws_sdk_s3::primitives::ByteStream;
 use aws_config::{self, load_defaults, BehaviorVersion};
@@ -41,7 +40,7 @@ pub struct LambdaOutput {
 async fn process_input(input: LambdaInput, sentiment_model: Arc<Mutex<SentimentModel>>) -> Result<LambdaOutput, LambdaError> {
     if input.command == "sentiment" {
         // 使用传入的sentiment_model进行情绪分析
-        let sentiment = analyze_sentiment_and_update_s3(&input.text, "sentiments-data", sentiment_model).await?;
+        let sentiment = analyze_sentiment_and_update_s3(&input.text, "ids-721-data", sentiment_model).await?;
         Ok(LambdaOutput {
             result: format!("Sentiment: {:?}", sentiment),
         })
@@ -146,52 +145,20 @@ async fn update_sentiment_count_in_s3(client: &S3Client, bucket: &str, update_se
 }
 
 async fn function_handler(event: Request, sentiment_model: Arc<Mutex<SentimentModel>>) -> Result<Response<Body>, Error> {
-    // 确保请求是 GET 请求
-    if event.method() == http::Method::GET {
-        // 解析 URL 查询参数
-        let query_params = event.uri().query().unwrap_or("");
-        let query_map: Result<HashMap<String, String>, _> = serde_urlencoded::from_str(query_params);
+    if let Ok(input) = serde_json::from_slice::<LambdaInput>(event.body()) {
+        // 调用process_input，传递input和sentiment_model
+        let output = process_input(input, sentiment_model).await.map_err(|e| {
+            LambdaError::InternalError(format!("Failed to process input: {}", e))
+        })?;
 
-        if let Err(_) = query_map {
-            return Ok(Response::builder()
-                .status(StatusCode::BAD_REQUEST)
-                .header("Content-Type", "application/json")
-                .body(json!({"error": "Invalid query parameters"}).to_string().into())
-                .expect("Failed to render response"));
-        }
-
-        // 从查询参数中提取 'text' 字段
-        if let Some(text) = query_map.unwrap().get("text") {
-            let input = LambdaInput {
-                command: "sentiment".to_string(),
-                text: text.clone(),
-            };
-            let output = process_input(input, sentiment_model).await.map_err(|e| {
-                LambdaError::InternalError(format!("Failed to process input: {}", e))
-            })?;
-
-            println!("{:?}", json!(output).to_string());
-            Ok(Response::builder()
-                .status(StatusCode::OK)
-                .header("Content-Type", "application/json")
-                .body(json!(output).to_string().into())
-                .expect("Failed to render response"))
-        } else {
-            // 如果没有提供 text 参数，返回错误响应
-            println!("error: Missing text parameter. Failed to render response.");
-            return Ok(Response::builder()
-                .status(StatusCode::BAD_REQUEST)
-                .header("Content-Type", "application/json")
-                .body(json!({"error": "Missing text parameter"}).to_string().into())
-                .expect("Failed to render response"));
-        }
-    } else {
-        // 如果不是 GET 请求，返回方法不允许
-        println!("error: Method not allowed. Failed to render response.");
         Ok(Response::builder()
-            .status(StatusCode::METHOD_NOT_ALLOWED)
-            .header("Content-Type", "application/json")
-            .body(json!({"error": "Method not allowed"}).to_string().into())
+            .status(StatusCode::OK)
+            .body(json!(output).to_string().into())
+            .expect("Failed to render response"))
+    } else {
+        Ok(Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body("Invalid request".into())
             .expect("Failed to render response"))
     }
 }
